@@ -1,0 +1,33 @@
+From 6fd3dd6ea04806c3a7f64d9389233fc9f236129d Mon Sep 17 00:00:00 2001
+From: Samuel Pitoiset <samuel.pitoiset@gmail.com>
+Date: Wed, 25 Oct 2023 18:53:33 +0200
+Subject: [PATCH 5/6] radv: only initialize the VTX base SGPR if non-zero with
+ DGC
+
+Otherwise, its value is incorrect.
+
+Signed-off-by: Samuel Pitoiset <samuel.pitoiset@gmail.com>
+---
+ src/amd/vulkan/radv_device_generated_commands.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/amd/vulkan/radv_device_generated_commands.c b/src/amd/vulkan/radv_device_generated_commands.c
+index 0794e8c40f9..7f171eb6eb8 100644
+--- a/src/amd/vulkan/radv_device_generated_commands.c
++++ b/src/amd/vulkan/radv_device_generated_commands.c
+@@ -1406,7 +1406,11 @@ radv_prepare_dgc_graphics(struct radv_cmd_buffer *cmd_buffer, const VkGeneratedC
+       return;
+    }
+ 
+-   uint16_t vtx_base_sgpr = (cmd_buffer->state.graphics_pipeline->vtx_base_sgpr - SI_SH_REG_OFFSET) >> 2;
++   uint16_t vtx_base_sgpr = 0;
++
++   if (cmd_buffer->state.graphics_pipeline->vtx_base_sgpr)
++      vtx_base_sgpr = (cmd_buffer->state.graphics_pipeline->vtx_base_sgpr - SI_SH_REG_OFFSET) >> 2;
++
+    if (cmd_buffer->state.graphics_pipeline->uses_drawid)
+       vtx_base_sgpr |= DGC_USES_DRAWID;
+    if (cmd_buffer->state.graphics_pipeline->uses_baseinstance)
+-- 
+2.42.0
+

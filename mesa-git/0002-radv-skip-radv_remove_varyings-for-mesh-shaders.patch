@@ -1,0 +1,33 @@
+From 935f54ea0f30bf6b19d9422ebd9bae4dbd43f742 Mon Sep 17 00:00:00 2001
+From: Rhys Perry <pendingchaos02@gmail.com>
+Date: Wed, 11 Oct 2023 14:46:20 +0100
+Subject: [PATCH 2/6] radv: skip radv_remove_varyings for mesh shaders
+
+Fixes compilation of a Talos Principle 2 shader.
+
+Signed-off-by: Rhys Perry <pendingchaos02@gmail.com>
+Fixes: 9fa9782c1790 ("radv: stop compiling a noop FS when the application doesn't provide a FS")
+---
+ src/amd/vulkan/radv_pipeline_graphics.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/amd/vulkan/radv_pipeline_graphics.c b/src/amd/vulkan/radv_pipeline_graphics.c
+index 84c4e3f138e..da7138cc05d 100644
+--- a/src/amd/vulkan/radv_pipeline_graphics.c
++++ b/src/amd/vulkan/radv_pipeline_graphics.c
+@@ -1627,6 +1627,12 @@ radv_pipeline_needs_noop_fs(struct radv_graphics_pipeline *pipeline, const struc
+ static void
+ radv_remove_varyings(nir_shader *nir)
+ {
++   /* We can't demote mesh outputs to nir_var_shader_temp yet, because
++    * they don't support array derefs of vectors.
++    */
++   if (nir->info.stage == MESA_SHADER_MESH)
++      return;
++
+    bool fixup_derefs = false;
+ 
+    nir_foreach_shader_out_variable (var, nir) {
+-- 
+2.42.0
+
